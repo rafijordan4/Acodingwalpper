@@ -11,8 +11,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <!-- Firebase -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDcQvWVq-KXn7qg6xWeiOs88GI_ofho5dM",
@@ -25,6 +26,7 @@
   };
 
   const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
 
@@ -36,7 +38,6 @@
 
   onAuthStateChanged(auth, (user) => {
     window._currentUser = user;
-    updateAuthUI(user);
     // Auth gate control
     const gate = document.getElementById('authGate');
     if (user) {
@@ -49,23 +50,21 @@
     }
   });
 
-  function updateAuthUI(user) {
-    // Sidebar profile is updated when sidebar opens via updateStudioSidebarProfile()
-    // Nothing else needed here since auth gate handles show/hide
-  }
-
   window.googleSignIn = async function() {
     try {
       await signInWithPopup(auth, provider);
       if (typeof toast === 'function') toast('✅ Login berhasil!', 'success');
     } catch (err) {
-      if (typeof toast === 'function') toast('❌ Login gagal: ' + err.message, 'error');
+      const msg = err.code === 'auth/popup-blocked'
+        ? 'Popup diblokir browser. Izinkan popup dulu.'
+        : err.code === 'auth/cancelled-popup-request'
+        ? 'Login dibatalkan.'
+        : 'Login gagal: ' + err.message;
+      if (typeof toast === 'function') toast('❌ ' + msg, 'error');
     }
   };
 
   window.googleSignOut = async function() {
-    const menu = document.getElementById('userMenu');
-    if (menu) menu.classList.remove('open');
     await signOut(auth);
     if (typeof toast === 'function') toast('👋 Logout berhasil', 'info');
   };
