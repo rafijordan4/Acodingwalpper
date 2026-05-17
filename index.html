@@ -7,8 +7,69 @@
 
 <link rel="icon" type="image/x-icon" href="images/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Mono:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Montserrat:wght@400;700;800&family=Raleway:wght@400;700;800&family=Playfair+Display:wght@400;700&family=Oswald:wght@400;700&family=Pacifico&family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Lobster&family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;700&family=Righteous&family=Abril+Fatface&family=Comfortaa:wght@400;700&family=Quicksand:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDcQvWVq-KXn7qg6xWeiOs88GI_ofho5dM",
+    authDomain: "wallpaper-1cc49.firebaseapp.com",
+    projectId: "wallpaper-1cc49",
+    storageBucket: "wallpaper-1cc49.firebasestorage.app",
+    messagingSenderId: "870807214375",
+    appId: "1:870807214375:web:8addaffa3eec4e2bbcf102",
+    measurementId: "G-HTFST69002"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // Expose to global scope
+  window._firebaseAuth = auth;
+  window._googleProvider = provider;
+  window._signInWithPopup = signInWithPopup;
+  window._signOut = signOut;
+
+  onAuthStateChanged(auth, (user) => {
+    window._currentUser = user;
+    updateAuthUI(user);
+    // Auth gate control
+    const gate = document.getElementById('authGate');
+    if (user) {
+      gate.style.transition = 'opacity 0.4s ease';
+      gate.style.opacity = '0';
+      setTimeout(() => { gate.style.display = 'none'; }, 400);
+    } else {
+      gate.style.display = 'flex';
+      gate.style.opacity = '1';
+    }
+  });
+
+  function updateAuthUI(user) {
+    // Sidebar profile is updated when sidebar opens via updateStudioSidebarProfile()
+    // Nothing else needed here since auth gate handles show/hide
+  }
+
+  window.googleSignIn = async function() {
+    try {
+      await signInWithPopup(auth, provider);
+      if (typeof toast === 'function') toast('✅ Login berhasil!', 'success');
+    } catch (err) {
+      if (typeof toast === 'function') toast('❌ Login gagal: ' + err.message, 'error');
+    }
+  };
+
+  window.googleSignOut = async function() {
+    const menu = document.getElementById('userMenu');
+    if (menu) menu.classList.remove('open');
+    await signOut(auth);
+    if (typeof toast === 'function') toast('👋 Logout berhasil', 'info');
+  };
+</script>
 <style>
 :root {
   --bg: #080b12;
@@ -40,7 +101,11 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;overflow-x:hidden}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;
+  -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
+}
+/* Allow selection only in inputs/textareas */
+input,textarea,select,[contenteditable]{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(108,99,255,0.08) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 100%,rgba(0,212,255,0.06) 0%,transparent 60%);pointer-events:none;z-index:0}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--bg2)}
@@ -64,6 +129,80 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;display:flex;al
 .nav-btn .count{background:var(--pink);color:#fff;border-radius:99px;padding:0 5px;font-size:10px;font-weight:700;min-width:16px;text-align:center}
 .hide-sm{display:inline}
 @media(max-width:560px){.hide-sm{display:none}.nav-search{max-width:200px}}
+
+/* AUTH */
+.nav-login-btn{height:34px;padding:0 14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:99px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:var(--transition);white-space:nowrap;font-weight:500;box-shadow:0 0 14px rgba(108,99,255,0.35)}
+.nav-login-btn:hover{transform:translateY(-1px);box-shadow:0 0 22px rgba(108,99,255,0.5)}
+.nav-login-btn svg{width:14px;height:14px;flex-shrink:0}
+.user-avatar-wrap{position:relative;display:none;align-items:center}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));border:2px solid var(--accent);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;transition:var(--transition);flex-shrink:0}
+.user-avatar:hover{box-shadow:0 0 14px rgba(108,99,255,0.5);transform:scale(1.05)}
+.user-avatar img{width:100%;height:100%;object-fit:cover}
+.avatar-initial{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;font-family:'Syne',sans-serif}
+.user-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:200px;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.6);z-index:2000;overflow:hidden;display:none}
+.user-menu.open{display:block;animation:fadeIn 0.15s ease}
+.user-menu-header{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--glass)}
+.user-menu-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-menu-email{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.user-menu-item{width:100%;padding:10px 14px;background:none;border:none;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:var(--transition);text-align:left}
+.user-menu-item:hover{background:var(--glass);color:var(--text)}
+.user-menu-item.danger{color:var(--red)}
+.user-menu-item.danger:hover{background:rgba(239,68,68,0.1)}
+
+/* ═══ AUTH GATE ═══ */
+#authGate{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column}
+#authGate::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 30% 20%,rgba(108,99,255,0.12) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 70% 80%,rgba(0,212,255,0.08) 0%,transparent 60%);pointer-events:none}
+.auth-card{position:relative;z-index:1;background:var(--bg2);border:1px solid var(--border2);border-radius:28px;padding:40px 36px;width:90%;max-width:400px;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,0.7),0 0 60px rgba(108,99,255,0.1)}
+.auth-logo{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--neon),var(--accent),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.auth-tagline{font-size:13px;color:var(--text2);margin-bottom:8px}
+.auth-divider{width:40px;height:2px;background:linear-gradient(90deg,var(--accent),var(--neon));margin:18px auto;border-radius:99px}
+.auth-desc{font-size:13px;color:var(--text2);margin-bottom:28px;line-height:1.7}
+.auth-desc span{color:var(--text);font-weight:500}
+.google-signin-btn{width:100%;height:52px;background:#fff;border:none;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:15px;font-weight:600;color:#3c4043;cursor:pointer;transition:all 0.25s ease;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.google-signin-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.google-signin-btn:active{transform:translateY(0)}
+.google-signin-btn svg{width:22px;height:22px;flex-shrink:0}
+.auth-footer{margin-top:20px;font-size:11px;color:var(--text3);line-height:1.6}
+.auth-features{display:flex;justify-content:center;gap:18px;margin-bottom:22px}
+.auth-feat{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10px;color:var(--text3)}
+.auth-feat i{font-size:18px;color:var(--accent)}
+
+/* ═══ STUDIO SIDEBAR ═══ */
+#studioSidebarOverlay{position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);visibility:hidden;opacity:0;transition:opacity 0.3s ease,visibility 0.3s ease}
+#studioSidebarOverlay.open{visibility:visible;opacity:1}
+#studioSidebar{position:fixed;top:0;left:-320px;width:300px;bottom:0;z-index:99995;background:var(--bg2);border-right:1px solid var(--border2);transition:left 0.35s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:20px 0 60px rgba(0,0,0,0.5)}
+#studioSidebar.open{left:0}
+.studio-sb-profile{padding:20px 16px 16px;background:linear-gradient(160deg,rgba(108,99,255,0.12),rgba(0,212,255,0.06));border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.studio-sb-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));border:2px solid var(--accent);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 16px rgba(108,99,255,0.4)}
+.studio-sb-avatar img{width:100%;height:100%;object-fit:cover}
+.studio-sb-avatar-initial{font-size:18px;font-weight:700;color:#fff;font-family:'Syne',sans-serif}
+.studio-sb-info{flex:1;min-width:0}
+.studio-sb-name{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Syne',sans-serif}
+.studio-sb-email{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.studio-sb-badge{font-size:9px;background:linear-gradient(135deg,var(--accent),var(--neon));color:#fff;border-radius:99px;padding:2px 8px;margin-top:4px;display:inline-block;font-weight:600;letter-spacing:0.5px}
+.studio-sb-close{width:30px;height:30px;background:var(--glass);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:var(--transition);flex-shrink:0}
+.studio-sb-close:hover{background:var(--glass2);color:var(--text)}
+.studio-sb-body{flex:1;overflow-y:auto;padding:12px}
+.studio-sb-body::-webkit-scrollbar{width:4px}
+.studio-sb-body::-webkit-scrollbar-thumb{background:var(--accent);border-radius:99px}
+.studio-sb-section{margin-bottom:18px}
+.studio-sb-section-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);font-weight:600;padding:0 4px;margin-bottom:8px}
+.studio-sb-item{width:100%;height:42px;background:var(--glass);border:1px solid var(--border);border-radius:11px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;padding:0 14px;transition:var(--transition);margin-bottom:5px;text-align:left}
+.studio-sb-item:hover{background:var(--glass2);border-color:var(--border2);color:var(--text);transform:translateX(3px)}
+.studio-sb-item i{font-size:14px;width:18px;text-align:center;color:var(--accent);flex-shrink:0}
+.studio-sb-item.active{background:rgba(108,99,255,0.15);border-color:var(--accent);color:var(--accent)}
+.studio-sb-item.active i{color:var(--accent)}
+.studio-sb-item.danger i{color:var(--red)}
+.studio-sb-item.danger:hover{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:var(--red)}
+.studio-sb-item .sb-badge{margin-left:auto;background:var(--pink);color:#fff;border-radius:99px;padding:1px 7px;font-size:10px;font-weight:700;min-width:20px;text-align:center}
+.studio-sb-divider{height:1px;background:var(--border);margin:10px 0}
+.studio-sb-cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.studio-sb-cat{height:36px;background:var(--glass);border:1px solid var(--border);border-radius:9px;color:var(--text2);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:0 10px;transition:var(--transition)}
+.studio-sb-cat:hover{background:var(--glass2);border-color:var(--border2);color:var(--text)}
+.studio-sb-cat.active{background:rgba(108,99,255,0.18);border-color:var(--accent);color:var(--accent)}
+.studio-sb-footer{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0}
+.studio-sb-logout{width:100%;height:38px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;color:var(--red);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--transition)}
+.studio-sb-logout:hover{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4)}
 
 /* MAIN */
 main{padding-top:64px;min-height:100vh;position:relative;z-index:1}
@@ -466,6 +605,11 @@ main{padding-top:64px;min-height:100vh;position:relative;z-index:1}
     </button>
     <button class="nav-btn" onclick="toggleWidget()">
       <i class="fa fa-th-large"></i>
+    </button>
+
+    <!-- Studio Sidebar Button -->
+    <button class="nav-btn" onclick="openStudioSidebar()" title="Menu" style="background:linear-gradient(135deg,rgba(108,99,255,0.2),rgba(139,92,246,0.15));border-color:var(--accent);color:var(--accent)">
+      <i class="fa fa-bars"></i>
     </button>
   </div>
 </nav>
@@ -1061,6 +1205,63 @@ function initApp() {
   // Restore auto wallpaper
   const savedWP = localStorage.getItem('prism_current_wp');
   if (savedWP && autoWallpaperEnabled) applyBgWallpaper(savedWP);
+
+  // Close user menu on outside click
+  document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('userAvatar');
+    if (wrap && !wrap.contains(e.target)) {
+      const menu = document.getElementById('userMenu');
+      if (menu) menu.classList.remove('open');
+    }
+  });
+
+  // Copy & drag protection
+  document.addEventListener('copy', e => {
+    const tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    e.preventDefault();
+  });
+  document.addEventListener('dragstart', e => {
+    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
+  });
+  document.addEventListener('keydown', e => {
+    const tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    // Block Ctrl+A (select all), Ctrl+C (copy), Ctrl+U (view source), Ctrl+S (save page)
+    if (e.ctrlKey && ['a','c','u','s'].includes(e.key.toLowerCase())) {
+      // Allow Ctrl+Z, Ctrl+Y, Ctrl+D which are editor shortcuts
+      e.preventDefault();
+    }
+  });
+
+  // Swipe gesture untuk buka/tutup studio sidebar
+  let swipeStartX = 0, swipeStartY = 0, swipeStartTime = 0;
+  document.addEventListener('touchstart', e => {
+    swipeStartX = e.touches[0].clientX;
+    swipeStartY = e.touches[0].clientY;
+    swipeStartTime = Date.now();
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - swipeStartX;
+    const dy = e.changedTouches[0].clientY - swipeStartY;
+    const dt = Date.now() - swipeStartTime;
+    const sidebar = document.getElementById('studioSidebar');
+    const isOpen = sidebar.classList.contains('open');
+    // Swipe must be fast, mostly horizontal, and > 60px
+    if (dt > 400 || Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 60) return;
+    if (!isOpen && dx > 0 && swipeStartX < 40) {
+      // Swipe kanan dari tepi kiri → buka sidebar
+      openStudioSidebar();
+    } else if (isOpen && dx < 0) {
+      // Swipe kiri saat sidebar terbuka → tutup
+      closeStudioSidebar();
+    }
+  }, { passive: true });
+}
+
+function toggleUserMenu() {
+  const menu = document.getElementById('userMenu');
+  if (menu) menu.classList.toggle('open');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1618,6 +1819,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCtx()
 // AI WALLPAPER GENERATOR
 // ═══════════════════════════════════════════════════════
 let selectedAIStyle = '';
+const OPENROUTER_KEY = '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';
+const OPENROUTER_MODEL = 'mistralai/mistral-7b-instruct:free';
+
 function openAIGenerator() { openModal('aiModal'); document.getElementById('aiResultArea').innerHTML = ''; }
 function setAIStyle(btn, style) {
   document.querySelectorAll('.ai-style-btn').forEach(b => b.classList.remove('active'));
@@ -1626,39 +1830,92 @@ function setAIStyle(btn, style) {
   document.getElementById('aiPromptInput').value = style;
 }
 async function generateAIWallpaper() {
-  const prompt = document.getElementById('aiPromptInput').value.trim();
-  if (!prompt) { toast('Enter a prompt first!', 'error'); return; }
+  const userPrompt = document.getElementById('aiPromptInput').value.trim();
+  if (!userPrompt) { toast('Tulis prompt dulu!', 'error'); return; }
   const res = document.getElementById('aiResultArea');
-  res.innerHTML = '<div class="ai-loading"><div class="spinner"></div>Searching Pexels for your vision...</div>';
+  res.innerHTML = '<div class="ai-loading"><div class="spinner"></div>🤖 AI lagi mikir kata kunci terbaik...</div>';
+
+  let searchKeyword = userPrompt;
   try {
-    const data = await fetchPhotos(prompt, 1);
-    if (!data.photos.length) { res.innerHTML = '<div style="color:var(--text3);text-align:center;padding:20px">No results. Try different keywords.</div>'; return; }
-    res.innerHTML = `<div class="ai-result-grid">${data.photos.slice(0, 6).map(p => `
-      <div class="ai-result-item" onclick="selectAIResult(${JSON.stringify(p).replace(/"/g,'&quot;')})">
-        <img src="${p.src.medium}" loading="lazy" alt="">
-      </div>
-    `).join('')}</div>`;
-    toast('✨ AI found matching wallpapers!', 'ai');
+    const aiResp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_KEY}`,
+        'HTTP-Referer': window.location.href,
+        'X-Title': 'PRISM Wallpaper Studio'
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        max_tokens: 30,
+        messages: [{
+          role: 'user',
+          content: `Convert this wallpaper description to 3-5 English search keywords for Pexels image search. Reply ONLY the keywords, nothing else: "${userPrompt}"`
+        }]
+      })
+    });
+    if (aiResp.ok) {
+      const aiData = await aiResp.json();
+      const kw = aiData.choices?.[0]?.message?.content?.trim();
+      if (kw && kw.length < 100) searchKeyword = kw;
+    }
   } catch(e) {
-    res.innerHTML = '<div style="color:var(--red);text-align:center;padding:20px">Error fetching results</div>';
+    // fallback to original prompt
+  }
+
+  res.innerHTML = `<div class="ai-loading"><div class="spinner"></div>🔍 Mencari wallpaper: "<em>${searchKeyword}</em>"</div>`;
+  try {
+    const data = await fetchPhotos(searchKeyword, 1);
+    if (!data.photos.length) { res.innerHTML = '<div style="color:var(--text3);text-align:center;padding:20px">Tidak ada hasil. Coba deskripsi lain.</div>'; return; }
+    res.innerHTML = `
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px">🤖 AI keyword: <em style="color:var(--pink)">${searchKeyword}</em></div>
+      <div class="ai-result-grid">${data.photos.slice(0, 6).map(p => `
+        <div class="ai-result-item" onclick="selectAIResult(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+          <img src="${p.src.medium}" loading="lazy" alt="">
+        </div>
+      `).join('')}</div>`;
+    toast('✨ AI menemukan wallpaper!', 'ai');
+  } catch(e) {
+    res.innerHTML = '<div style="color:var(--red);text-align:center;padding:20px">Error. Cek koneksi kamu.</div>';
   }
 }
 function selectAIResult(photo) {
   currentPhoto = photo;
   closeModal('aiModal');
   openFullscreen(photo);
-  toast('🤖 AI wallpaper selected!', 'ai');
+  toast('🤖 AI wallpaper dipilih!', 'ai');
 }
-function openAIInEditor() {
-  const prompt = prompt('Describe text/element you want AI to suggest:');
-  if (!prompt) return;
-  toast('🤖 AI: generating suggestion...', 'ai');
-  setTimeout(() => {
-    const suggestions = ['✨ ' + prompt, prompt.toUpperCase(), '— ' + prompt + ' —', prompt + ' 🔥'];
-    const chosen = suggestions[Math.floor(Math.random() * suggestions.length)];
-    newObj({ type: 'text', text: chosen, color: '#ffffff', size: 72, font: 'Syne', bold: true, italic: false, shadow: true, shadowType: 'neon', w: 500, h: 100, x: CANVAS_W / 2 - 250, y: CANVAS_H / 2 - 50 });
-    toast('✅ AI text added!', 'ai');
-  }, 800);
+async function openAIInEditor() {
+  const userPrompt = window.prompt('Deskripsikan teks yang kamu mau (AI akan bantu):');
+  if (!userPrompt) return;
+  toast('🤖 AI sedang membuat teks...', 'ai');
+  let result = '✨ ' + userPrompt;
+  try {
+    const aiResp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_KEY}`,
+        'HTTP-Referer': window.location.href,
+        'X-Title': 'PRISM Wallpaper Studio'
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        max_tokens: 20,
+        messages: [{
+          role: 'user',
+          content: `Create a short, stylish wallpaper text (max 6 words) based on: "${userPrompt}". Reply ONLY the text, no quotes.`
+        }]
+      })
+    });
+    if (aiResp.ok) {
+      const aiData = await aiResp.json();
+      const txt = aiData.choices?.[0]?.message?.content?.trim();
+      if (txt && txt.length < 60) result = txt;
+    }
+  } catch(e) {}
+  newObj({ type: 'text', text: result, color: '#ffffff', size: 72, font: 'Syne', bold: true, italic: false, shadow: true, shadowType: 'neon', w: 600, h: 115, x: CANVAS_W/2-300, y: CANVAS_H/2-57 });
+  toast('✅ AI teks ditambahkan!', 'ai');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1999,8 +2256,72 @@ function confirmAddText() {
 }
 
 function openEmojiModal() {
-  const emojis = ['😀','😂','🥰','😎','🤩','🥳','😱','🤯','👍','❤️','🔥','⭐','🌈','🌊','🌸','🌺','🦋','🦄','🐬','🦁','🌙','☀️','⚡','🎨','🎮','🎵','🏆','💎','🚀','✨','💫','🌟','🎭','🎬','🎤','🌴','🍀','🌻','🦅','🐉','🏔','🌃','🎆','🎇','🍁','🌠','🌌','🐚','🌅','🌄','🌇','🗺','🌐','💜','🔮','⭕','🎯','🃏','🌀','🌑','🌕'];
-  document.getElementById('emojiGrid').innerHTML = emojis.map(e => `<button class="emoji-btn" onclick="addEmoji('${e}')">${e}</button>`).join('');
+  const EMOJI_TABS = {
+    '😀 Faces': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖'],
+    '👋 Gestures': ['👋','🤚','🖐','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🧠','🫀','🫁','🦷','🦴','👀','👁','👅','👄'],
+    '❤️ Hearts': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','❤️‍🔥','❤️‍🩹','💔','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'],
+    '🔥 Popular': ['🔥','⭐','✨','💫','🌟','⚡','🌈','🎉','🎊','🎈','🎀','🎁','🏆','🥇','🎯','💎','👑','🌸','🌺','🌻','🌼','🌹','🌷','💐','🦋','🦄','🐉','🌙','☀️','🌙','⭐','🌊','🌴','🍀','🎭','🎬','🎵','🎶','🎮','🚀','💡','🔮','🌀','💥','🎆','🎇','🌠','🌌','🛸'],
+    '🐱 Animals': ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐒','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🪲','🦟','🦗','🕷','🦂','🐢','🐍','🦎','🐊','🦕','🦖','🐙','🦑','🦐','🦀','🐡','🐟','🐠','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🦣','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🪶','🐓','🦃','🦤','🦚','🦜','🦢','🦩','🕊','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿','🦔'],
+    '🍕 Food': ['🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🫒','🧅','🥦','🌽','🌶','🫑','🥒','🥬','🧄','🥔','🍠','🥐','🥯','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🦴','🌭','🍔','🍟','🍕','🫓','🥪','🥙','🌮','🌯','🫔','🥗','🥘','🫕','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥮','🍢','🧆','🥚','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🧃','🥤','🧋','☕','🍵','🧉','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🍾'],
+    '⚽ Sports': ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸','🥌','🎿','⛷','🏂','🪂','🏋️','🤼','🤸','⛹','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🚣','🧗','🚵','🚴','🏆','🥇','🥈','🥉','🏅','🎖','🏵'],
+    '🌍 Travel': ['🚗','🚕','🚙','🚌','🚎','🏎','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍','🛵','🛺','🚲','🛴','🛹','🛼','🚏','🛣','🗺','🧭','⛽','🚧','⚓','🛟','⛵','🚤','🛥','🛳','⛴','🚢','✈️','🛩','🛫','🛬','🪂','💺','🚁','🚟','🚂','🚆','🚇','🚈','🚉','🚊','🚝','🚄','🚅','🛤','🚞','🚋','🚃','🗼','🗽','⛪','🕌','🛕','⛩','🕍','⛲','🏕','🏖','🏜','🏝','🏞','🏟','🏛','🏗','🧱','🏘','🏚','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗻','🌁','🌃','🏙','🌄','🌅','🌆','🌇','🌉','🌌','🌠','🎆','🎇'],
+    '💼 Objects': ['⌚','📱','📲','💻','⌨️','🖥','🖨','🖱','🖲','🕹','🗜','💽','💾','💿','📀','📼','📷','📸','📹','🎥','📽','🎞','📞','☎️','📟','📠','📺','📻','🧭','⏱','⏲','⏰','🕰','⌛','⏳','📡','🔋','🔌','💡','🔦','🕯','🪔','🧯','🛢','💸','💵','💴','💶','💷','🏷','🔖','💰','💳','💹','📧','📨','📩','📤','📥','📦','📫','📪','📬','📭','📮','🗳','✏️','✒️','🖋','🖊','📝','📁','📂','🗂','📅','📆','🗒','🗓','📇','📈','📉','📊','📋','📌','📍','🗺','📎','🖇','📏','📐','✂️','🗃','🗄','🗑','🔒','🔓','🔏','🔐','🔑','🗝','🔨','🪓','⛏','⚒','🛠','🗡','⚔️','🛡','🪚','🔧','🪛','🔩','⚙️','🗜','⚖️','🦯','🔗','⛓','🪤','🧲','🔫','💣','🪝','🧨','🪄','🔮','🪬','🧿','💈','⚗️','🔭','🔬','🩺','💊','💉','🩸','🩹','🩼','🩻','🩽','🧬','🦠','🧪','🧫','🧲','🧯','🌡','🪞','🪟','🛏','🛋','🪑','🚽','🪠','🚿','🛁','🧴','🧷','🧹','🧺','🧻','🪣','🧼','🫧','🧽','🪥','🧹','🧺','🪒','🪮','🧹','🏮','🪔'],
+    '🌙 Symbols': ['♠️','♥️','♦️','♣️','♟','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘','🔲','🔳','▪️','▫️','◾','◽','◼️','◻️','⬛','⬜','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','✅','❎','🆗','🆕','🆙','🆒','🆓','🆖','📵','🔞','🔱','⚜️','🔰','♻️','✔️','🔝','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','♿','🈳','🈹','🈵','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','⛔','📛','🚫','❌','💢','♨️','🚷','🚯','🚳','🚱','🔕','🔇','📴','📳','🔅','🔆','📶','🛜','📳','🔲','🔳','🔈','🔉','🔊','📢','📣','🔔','🔕','🎵','🎶','💹','🛗','🪧','🚾','♂️','♀️','⚧️','✖️','➕','➖','➗','🟰','♾️','💲','💱','‼️','⁉️','❓','❔','❕','❗','〰️','➰','➿','〽️','✅','☑️','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪']
+  };
+
+  const IPHONE_EMOJIS = {
+    '🍎 iPhone Misc': ['🫶','🫱','🫲','🫳','🫴','🫵','🫀','🫁','🧌','🪸','🪼','🫧','🪩','🪸','🪬','🫙','🩵','🩶','🩷','🫨','🫸','🫷','🪭','🪮','🪇','🪈','🫚','🫛','🪻','🫎','🪿','🪼','🫏','🪽','🫅','🪆','🪅','🧸','🪆','🖼','🧵','🪡','🧶','🪢','👓','🕶','🥽','🧣','🧤','🧥','👒','🎩','🪖','⛑','📿','💄','💍','💎','👜','👝','🎒','🧳','👛','👗','👙','🩱','👚','👕','👔','👖','🩲','🩳','👗','👘','🥻','🩴','👡','👠','👢','👞','👟','🥾','🧦','🧢','⛷','🏂'],
+    '🎨 iPhone Art': ['🫠','🥹','🫡','🫢','🫣','🫤','🫥','🫦','🫧','🫨','🤌','🤌🏻','🤌🏼','🤌🏽','🤌🏾','🤌🏿','🫰','🫰🏻','🫰🏼','🫰🏽','🫰🏾','🫰🏿','🫵','🫵🏻','🫵🏼','🫵🏽','🫵🏾','🫵🏿','🫱','🫲','🫳','🫴','🩻','🪬','🧿','🪄','🪅','🎑','🎐','🧨','🎊','🎉','🎈','🎀','🎁','🎗','🎟','🎫','🏷','🎖','🏆','🥇','🥈','🥉','⚽','🏀','🏈','⚾','🎾','🏐'],
+    '🌸 iPhone Nature': ['🪷','🪸','🌾','🍄','🪺','🪹','🪸','🌊','🌬','🌀','🌈','⚡','❄️','💧','💦','🫧','🌊','🍃','🍂','🍁','🍀','🌿','☘️','🌱','🌲','🌳','🌴','🎋','🎍','🪴','🌵','🌾','🍄','🌰','🦔','🦝','🦨','🦡','🦦','🦥','🦫','🦭','🐿','🐇','🦌','🦃','🦚','🦜','🦢','🦩','🕊','🦅','🦆','🦉','🦇','🌺','🌸','🌼','🌻','🌹','🥀','🌷','🌱','🌿','☘️','🍀','🎋','🎍','🍃','🍂','🍁','🍄','🌾','💐'],
+    '✨ iPhone Special': ['💫','⭐','🌟','✨','🌠','☄️','💥','🔥','🌈','❄️','🌊','🌀','🎇','🎆','🌌','🌃','🌉','🌁','🌄','🌅','🌆','🌇','🌙','🌛','🌜','🌝','🌞','🪐','⛅','🌤','🌥','🌦','🌧','🌨','🌩','🌪','🌫','🌬','🌮','🌯','🥙','🫔','🫕','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥮','🍢','🧆','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂']
+  };
+
+  // Build tabs
+  const allTabs = { ...EMOJI_TABS, ...IPHONE_EMOJIS };
+  const tabKeys = Object.keys(allTabs);
+  let activeTab = tabKeys[0];
+
+  const modal = document.getElementById('emojiGrid');
+  modal.innerHTML = '';
+
+  const container = document.createElement('div');
+
+  // Tab bar
+  const tabBar = document.createElement('div');
+  tabBar.style.cssText = 'display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid var(--border)';
+  tabKeys.forEach(key => {
+    const btn = document.createElement('button');
+    const [icon, label] = key.split(' ');
+    btn.innerHTML = `<span style="font-size:14px">${icon}</span>`;
+    btn.title = label || key;
+    btn.style.cssText = 'flex-shrink:0;width:36px;height:32px;background:var(--glass);border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:0.2s;font-size:14px';
+    if (key === activeTab) btn.style.borderColor = 'var(--accent)';
+    btn.onclick = () => {
+      activeTab = key;
+      document.querySelectorAll('#emojiGrid .tab-btn').forEach(b => b.style.borderColor = 'var(--border)');
+      btn.style.borderColor = 'var(--accent)';
+      renderEmojiGrid();
+    };
+    btn.className = 'tab-btn';
+    tabBar.appendChild(btn);
+  });
+  container.appendChild(tabBar);
+
+  // Grid area
+  const gridArea = document.createElement('div');
+  gridArea.id = 'emojiGridArea';
+  gridArea.style.cssText = 'display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-height:200px;overflow-y:auto;scrollbar-width:thin';
+  container.appendChild(gridArea);
+
+  modal.appendChild(container);
+
+  function renderEmojiGrid() {
+    gridArea.innerHTML = (allTabs[activeTab] || []).map(e =>
+      `<button class="emoji-btn" onclick="addEmoji('${e}')" style="font-size:20px;height:38px">${e}</button>`
+    ).join('');
+  }
+  renderEmojiGrid();
+
   openModal('emojiModal');
 }
 function addEmoji(emoji) {
@@ -2357,7 +2678,7 @@ function updatePropsPanel() {
       <div class="prop-row"><span class="prop-label">Rotate</span><input type="range" class="prop-range" min="-180" max="180" value="${obj.rotation||0}" oninput="updateProp('rotation',parseFloat(this.value))"></div>
       <div class="prop-row"><span class="prop-label">Font</span>
         <select class="props-select" onchange="updateProp('font',this.value);updateTextSizeProp()">
-          ${['Syne','DM Sans','Space Mono','serif','monospace','cursive','fantasy','Impact','Georgia'].map(f=>`<option${obj.font===f?' selected':''}>${f}</option>`).join('')}
+          ${['Syne','DM Sans','Space Mono','Roboto','Open Sans','Montserrat','Raleway','Playfair Display','Oswald','Pacifico','Bebas Neue','Dancing Script','Lobster','Orbitron','Exo 2','Righteous','Abril Fatface','Comfortaa','Quicksand','Press Start 2P'].map(f=>`<option${obj.font===f?' selected':''}>${f}</option>`).join('')}
         </select>
       </div>
       <div class="prop-row"><span class="prop-label">Shadow</span>
@@ -2392,10 +2713,8 @@ function updatePropsPanel() {
 function updateProp(key, val) { const obj=getSelectedObj(); if(!obj) return; obj[key]=val; }
 function toggleProp(key) { const obj=getSelectedObj(); if(!obj) return; obj[key]=!obj[key]; updatePropsPanel(); }
 function updateTextSize(obj) {
-  const fontStr = `${obj.bold?'bold ':''}${obj.italic?'italic ':''}${obj.size}px "${obj.font||'Syne'}"`;
-  ctx2.font = fontStr;
-  obj.w = Math.max(80, ctx2.measureText(obj.text).width + 30);
-  obj.h = obj.size * 1.6;
+  // Scale font size proportionally based on bounding box height
+  obj.size = Math.max(8, Math.round(obj.h / 1.6));
 }
 function updateTextSizeProp() { const obj=getSelectedObj(); if(obj&&obj.type==='text') updateTextSize(obj); }
 
@@ -2536,6 +2855,79 @@ const editorObserver=new MutationObserver(()=>{if(document.getElementById('edito
 editorObserver.observe(document.getElementById('editorPage'),{attributes:true,attributeFilter:['class']});
 
 // ═══════════════════════════════════════════════════════
+// STUDIO SIDEBAR
+// ═══════════════════════════════════════════════════════
+function openStudioSidebar() {
+  document.getElementById('studioSidebar').classList.add('open');
+  document.getElementById('studioSidebarOverlay').classList.add('open');
+  updateStudioSidebarProfile();
+  updateStudioSidebarFavCount();
+}
+function closeStudioSidebar() {
+  document.getElementById('studioSidebar').classList.remove('open');
+  document.getElementById('studioSidebarOverlay').classList.remove('open');
+}
+function updateStudioSidebarProfile() {
+  const user = window._currentUser;
+  if (!user) return;
+  const img = document.getElementById('sbAvatarImg');
+  const initial = document.getElementById('sbAvatarInitial');
+  if (user.photoURL) {
+    img.src = user.photoURL;
+    img.style.display = 'block';
+    initial.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    initial.style.display = 'flex';
+    initial.textContent = (user.displayName || user.email || 'U')[0].toUpperCase();
+  }
+  document.getElementById('sbUserName').textContent = user.displayName || 'User';
+  document.getElementById('sbUserEmail').textContent = user.email || '';
+}
+function updateStudioSidebarFavCount() {
+  const el = document.getElementById('sbFavCount');
+  if (el) el.textContent = favorites.length;
+}
+function sbSetCategory(el, cat) {
+  document.querySelectorAll('.studio-sb-cat').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  // sync with main category bar
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    if (b.getAttribute('data-cat') === cat || (cat === '' && b.textContent.includes('All'))) {
+      b.classList.add('active');
+    } else {
+      b.classList.remove('active');
+    }
+  });
+  setCategory(null, cat);
+  closeStudioSidebar();
+}
+function sbRandomWallpaper() {
+  closeStudioSidebar();
+  setTimeout(randomWallpaper, 350);
+}
+function sbOpenFavorites() {
+  closeStudioSidebar();
+  setTimeout(() => openPanel('favorites'), 350);
+}
+function sbOpenHistory() {
+  closeStudioSidebar();
+  setTimeout(() => openPanel('history'), 350);
+}
+function sbOpenAI() {
+  closeStudioSidebar();
+  setTimeout(openAIGenerator, 350);
+}
+function sbOpenSchedule() {
+  closeStudioSidebar();
+  setTimeout(openTimeSchedule, 350);
+}
+function sbOpenEditor() {
+  closeStudioSidebar();
+  setTimeout(() => { if (currentPhoto) openEditorFromFS(); else toast('Pilih wallpaper dulu!', 'info'); }, 350);
+}
+
+// ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
 (function(){
@@ -2543,5 +2935,115 @@ editorObserver.observe(document.getElementById('editorPage'),{attributes:true,at
   initApp();
 })();
 </script>
+
+<!-- ═══ AUTH GATE ═══ -->
+<div id="authGate">
+  <div class="auth-card">
+    <div class="auth-logo">PRISM ✦</div>
+    <div class="auth-tagline">Wallpaper Studio Pro</div>
+    <div class="auth-divider"></div>
+    <div class="auth-features">
+      <div class="auth-feat"><i class="fa fa-images"></i>HD Gallery</div>
+      <div class="auth-feat"><i class="fa fa-wand-magic-sparkles"></i>AI Gen</div>
+      <div class="auth-feat"><i class="fa fa-pen-nib"></i>Editor</div>
+      <div class="auth-feat"><i class="fa fa-heart"></i>Favorites</div>
+    </div>
+    <div class="auth-desc">Masuk dengan akun Google untuk mengakses <span>ribuan wallpaper HD</span>, editor studio, dan fitur AI generator.</div>
+    <button class="google-signin-btn" onclick="googleSignIn()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Masuk dengan Google
+    </button>
+    <div class="auth-footer">Dengan masuk, kamu menyetujui penggunaan layanan ini.<br>Data kamu aman dan tidak dibagikan ke pihak ketiga.</div>
+  </div>
+</div>
+
+<!-- ═══ STUDIO SIDEBAR ═══ -->
+<div id="studioSidebarOverlay" onclick="closeStudioSidebar()"></div>
+<div id="studioSidebar">
+  <!-- Profile Header -->
+  <div class="studio-sb-profile">
+    <div class="studio-sb-avatar">
+      <img id="sbAvatarImg" src="" alt="" style="display:none">
+      <div class="studio-sb-avatar-initial" id="sbAvatarInitial">U</div>
+    </div>
+    <div class="studio-sb-info">
+      <div class="studio-sb-name" id="sbUserName">User</div>
+      <div class="studio-sb-email" id="sbUserEmail"></div>
+      <div class="studio-sb-badge">✦ Pro Member</div>
+    </div>
+    <button class="studio-sb-close" onclick="closeStudioSidebar()"><i class="fa fa-times"></i></button>
+  </div>
+
+  <!-- Body -->
+  <div class="studio-sb-body">
+
+    <!-- Quick Actions -->
+    <div class="studio-sb-section">
+      <div class="studio-sb-section-title">Quick Actions</div>
+      <button class="studio-sb-item active" onclick="sbRandomWallpaper()">
+        <i class="fa fa-shuffle"></i> Acak Wallpaper
+      </button>
+      <button class="studio-sb-item" onclick="sbOpenAI()">
+        <i class="fa fa-wand-magic-sparkles"></i> AI Generator
+        <span class="sb-badge" style="background:var(--pink)">AI</span>
+      </button>
+      <button class="studio-sb-item" onclick="sbOpenEditor()">
+        <i class="fa fa-pen-nib"></i> Studio Editor
+      </button>
+      <button class="studio-sb-item" onclick="sbOpenSchedule()">
+        <i class="fa fa-clock"></i> Auto Schedule
+      </button>
+    </div>
+
+    <div class="studio-sb-divider"></div>
+
+    <!-- My Collection -->
+    <div class="studio-sb-section">
+      <div class="studio-sb-section-title">Koleksiku</div>
+      <button class="studio-sb-item" onclick="sbOpenFavorites()">
+        <i class="fa fa-heart"></i> Favorites
+        <span class="sb-badge" id="sbFavCount">0</span>
+      </button>
+      <button class="studio-sb-item" onclick="sbOpenHistory()">
+        <i class="fa fa-clock-rotate-left"></i> History
+      </button>
+    </div>
+
+    <div class="studio-sb-divider"></div>
+
+    <!-- Kategori -->
+    <div class="studio-sb-section">
+      <div class="studio-sb-section-title">Semua Kategori</div>
+      <div class="studio-sb-cat-grid">
+        <button class="studio-sb-cat active" onclick="sbSetCategory(this,'')"><i class="fa fa-border-all"></i> Semua</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'nature')"><i class="fa fa-leaf"></i> Nature</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'city')"><i class="fa fa-city"></i> City</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'dark aesthetic')"><i class="fa fa-moon"></i> Dark</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'cyberpunk neon')"><i class="fa fa-bolt"></i> Cyber</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'anime landscape')"><i class="fa fa-star"></i> Anime</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'space galaxy')"><i class="fa fa-rocket"></i> Space</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'ocean beach')"><i class="fa fa-water"></i> Ocean</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'abstract art')"><i class="fa fa-circle-nodes"></i> Abstract</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'mountain snow')"><i class="fa fa-mountain"></i> Mountain</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'minimal wallpaper')"><i class="fa fa-minus"></i> Minimal</button>
+        <button class="studio-sb-cat" onclick="sbSetCategory(this,'lofi aesthetic')"><i class="fa fa-headphones"></i> Lofi</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer Logout -->
+  <div class="studio-sb-footer">
+    <button class="studio-sb-logout" onclick="googleSignOut()">
+      <i class="fa fa-right-from-bracket"></i> Logout dari akun ini
+    </button>
+  </div>
+</div>
+
 </body>
 </html>
